@@ -1,0 +1,62 @@
+{
+  "common": {
+    "appName": "HealthBridge",
+    "tagline": "Healthcare Access & Coordination Platform",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "tryAgain": "Try again",
+    "notFound": "Page not found",
+    "notFoundDescription": "The page you are looking for does not exist or has been moved.",
+    "returnHome": "Return home",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "search": "Search",
+    "noResults": "No results found",
+    "actions": "Actions"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "signUp": "Sign up",
+    "welcomeBack": "Welcome back",
+    "signInDescription": "Sign in to access the healthcare coordination platform",
+    "signingIn": "Signing in...",
+    "signInError": "Unable to sign in. Please try again.",
+    "continueWith": "Or continue with"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "patients": "Patients",
+    "appointments": "Appointments",
+    "queue": "Queue",
+    "consultations": "Consultations",
+    "diagnostics": "Diagnostics",
+    "pharmacy": "Pharmacy",
+    "referrals": "Referrals",
+    "settings": "Settings",
+    "profile": "Profile"
+  },
+  "roles": {
+    "admin": "Hospital Admin",
+    "doctor": "Doctor",
+    "nurse": "Nurse",
+    "receptionist": "Receptionist",
+    "pharmacist": "Pharmacist",
+    "labStaff": "Lab Staff"
+  },
+  "theme": {
+    "light": "Light mode",
+    "dark": "Dark mode",
+    "switchTo": "Switch to {mode}"
+  },
+  "language": {
+    "select": "Select language",
+    "en": "English",
+    "hi": "Hindi",
+    "mr": "Marathi"
+  }
+}

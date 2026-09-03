@@ -62,11 +62,17 @@ Authorization: Bearer <clerk_jwt_token>
 | `UNAUTHORIZED`     | 401         | Missing or invalid authentication token |
 | `FORBIDDEN`        | 403         | Insufficient role permissions         |
 | `NOT_FOUND`        | 404         | Requested entity does not exist       |
-| `CONFLICT`         | 409         | Resource conflict (e.g. duplicate key)|
+| `CONFLICT`         | 409         | Resource conflict (e.g. onboarding completed) |
 | `VALIDATION_ERROR` | 422         | Request body validation failed        |
 | `INTERNAL_ERROR`   | 500         | Internal server error                 |
 
-## Endpoints Summary (Foundation)
+## Endpoints Summary (Foundation & Phase 20)
 
+### Public Endpoints
 - `GET /api/health` — Health check endpoint
-- `GET /api/auth/me` — Verify token & return current user role
+- `GET /api/facilities` — List active healthcare facilities (for onboarding selection)
+- `POST /api/seed/facilities` — Seed demo facilities (Development mode only)
+
+### Protected Endpoints (Requires Auth)
+- `GET /api/auth/me` — Verify Clerk identity and fetch full HealthBridge user profile (status, requestedRole, approvedRole, facility)
+- `POST /api/onboarding` — Submit initial role request (facilityId, requestedRole). Creates user record with `status = "pending"` and `approvedRole = null`.

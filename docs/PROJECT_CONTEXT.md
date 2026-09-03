@@ -31,12 +31,12 @@ Referrals & Follow-Up (Doctor / Nurse)
 
 - **Frontend**: Next.js 15 (App Router), React 19, TypeScript, CSS Modules with Design Tokens
 - **Backend**: Node.js, Express.js, TypeScript
-- **Auth**: Clerk Authentication
+- **Auth**: Clerk Authentication + Role Request & Admin Approval Model
 - **Primary Database**: MongoDB Atlas
 - **Storage / Realtime**: Supabase
 - **Supported Languages**: English (`en`), Hindi (`hi`), Marathi (`mr`)
 
-## Shared Foundation Scope (Completed)
+## Shared Foundation Scope (Completed including Phase 20)
 
 1. Monorepo architecture with npm workspaces (`apps/web`, `apps/api`, `packages/ui`, `packages/types`, `packages/validation`, `packages/config`).
 2. Next.js web application with global layout, loading, error, not-found, design tokens, light/dark mode.
@@ -44,7 +44,7 @@ Referrals & Follow-Up (Doctor / Nurse)
 4. Responsive application shell (Sidebar, Header, AppShell).
 5. Internationalization setup for English, Hindi, Marathi.
 6. Clerk authentication integration, sign-in page, sign-up page, middleware, user provider.
-7. Protected role-aware dashboard foundation.
-8. Express API backend with health check endpoint (`GET /api/health`), error handler, response utilities, and auth verification middleware.
+7. Role Request & Admin Approval architecture (`/onboarding`, `status` = PENDING/ACTIVE/REJECTED).
+8. Express API backend with health check endpoint (`GET /api/health`), onboarding endpoint (`POST /api/onboarding`), profile endpoint (`GET /api/auth/me`), facilities endpoint (`GET /api/facilities`), error handler, response utilities, and auth verification middleware.
 9. MongoDB Atlas connection & Supabase client modules.
 10. Project documentation in `docs/`.

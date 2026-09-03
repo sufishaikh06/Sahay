@@ -36,25 +36,46 @@ MongoDB Atlas            Supabase Storage          Clerk Auth
 - `@healthbridge/validation`: Shared Zod validation schemas
 - `@healthbridge/config`: Shared application constants and configuration
 
-## Role-Based Access Architecture
+## Role Request & Admin Approval Architecture (Phase 20)
+
+HealthBridge uses a **ROLE REQUEST + ADMIN APPROVAL** model. Normal users CANNOT self-assign privileged roles.
 
 ```text
-Clerk User (publicMetadata.role)
+Sign Up (Clerk Auth)
        │
        ▼
-UserContext (apps/web/components/providers/UserProvider.tsx)
+HealthBridge Onboarding (/onboarding)
+(User selects Facility + Requested Role: Doctor, Nurse, Receptionist, Pharmacist, Lab Staff)
        │
        ▼
-Role Navigation & Route Guarding (apps/web/lib/roles.ts)
+MongoDB User Document (status = "pending", requestedRole = "doctor", approvedRole = null)
+       │
+       ├─────────────────────────────────────────┐
+       │                                         │
+       ▼                                         ▼
+Hospital Admin Approves                   Hospital Admin Rejects
+(approvedRole = "doctor",                 (status = "rejected",
+ status = "active")                        rejectionReason = "...")
+       │                                         │
+       ▼                                         ▼
+ACTIVE User                               REJECTED User
+(Can access role dashboard)              (Sees rejection status screen)
 ```
 
-Supported roles:
-- `admin` — Hospital Administrator
-- `doctor` — Medical Practitioner
-- `nurse` — Nurse / Healthcare Worker
-- `receptionist` — Front Desk / Registration
-- `pharmacist` — Pharmacy Staff
-- `labStaff` — Laboratory Technician
+### Critical Authorization Rule
+- **`requestedRole`** is NEVER used for authorization.
+- Authorization decisions depend strictly on **`approvedRole`** and **`status === "active"`**.
+- Unapproved users (`status === "pending"`) see a dedicated pending-approval screen.
+- Rejected users (`status === "rejected"`) see a dedicated rejected screen.
+
+## Supported Roles
+
+- `admin` — Hospital Administrator (Provisioned via controlled administrative process; never self-requested)
+- `doctor` — Medical Practitioner (Self-requested, requires Admin approval)
+- `nurse` — Nurse / Healthcare Worker (Self-requested, requires Admin approval)
+- `receptionist` — Front Desk / Registration (Self-requested, requires Admin approval)
+- `pharmacist` — Pharmacy Staff (Self-requested, requires Admin approval)
+- `labStaff` — Laboratory Technician (Self-requested, requires Admin approval)
 
 ## Folder Ownership Strategy for Developers S1, S2, S3
 

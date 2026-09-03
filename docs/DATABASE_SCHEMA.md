@@ -7,14 +7,16 @@
 
 ## Data Naming Conventions
 
-- Collection names: `lowercase_plural` (e.g. `patients`, `appointments`, `prescriptions`)
-- Field names: `camelCase` (e.g. `fullName`, `createdAt`, `dateOfBirth`)
+- Collection names: `lowercase_plural` (e.g. `users`, `facilities`, `patients`, `appointments`)
+- Field names: `camelCase` (e.g. `clerkId`, `requestedRole`, `approvedRole`, `createdAt`)
 - Primary Keys: MongoDB ObjectId (`_id`), mapped to `id` string in API responses.
-- Timestamps: ISO-8601 strings (`2026-09-02T18:00:00Z`). Every document must have `createdAt` and `updatedAt`.
+- Timestamps: ISO-8601 strings (`2026-09-02T18:00:00Z`). Every document has `createdAt` and `updatedAt`.
 
-## Core Entities (High Level)
+## Core Entities
 
-### User / Health Worker
+### User (`users` collection)
+
+Stores application-level profile, facility association, role request, and approval workflow audit information.
 
 ```json
 {
@@ -23,14 +25,28 @@
   "email": "doctor@healthbridge.org",
   "firstName": "Aarav",
   "lastName": "Sharma",
-  "role": "doctor",
-  "facilityId": "ObjectId",
-  "createdAt": "ISODate",
-  "updatedAt": "ISODate"
+  "facilityId": "ObjectId(60d5ec49f1b2c812c4890a12)",
+  "requestedRole": "doctor",
+  "approvedRole": "doctor",
+  "status": "active",
+  "approvedBy": "user_2admin_id",
+  "approvedAt": "2026-09-03T10:00:00.000Z",
+  "rejectedBy": null,
+  "rejectedAt": null,
+  "rejectionReason": null,
+  "createdAt": "2026-09-03T09:00:00.000Z",
+  "updatedAt": "2026-09-03T10:00:00.000Z"
 }
 ```
 
-### Facility
+#### Status Enum:
+- `pending`: User completed onboarding; request awaiting Hospital Admin approval.
+- `active`: Hospital Admin approved request; `approvedRole` is populated.
+- `rejected`: Hospital Admin rejected request.
+
+### Facility (`facilities` collection)
+
+Stores healthcare facilities (Primary Health Center, Community Health Center, District Hospital, Sub Center).
 
 ```json
 {
@@ -40,23 +56,10 @@
   "code": "DHP-01",
   "district": "Pune",
   "state": "Maharashtra",
-  "createdAt": "ISODate",
-  "updatedAt": "ISODate"
-}
-```
-
-### Patient (Future - Developer S1/S2/S3)
-
-```json
-{
-  "_id": "ObjectId",
-  "uhid": "ABHA-1234-5678-9012",
-  "fullName": "Priya Patel",
-  "gender": "female",
-  "dateOfBirth": "1990-05-15",
-  "phone": "9876543210",
-  "address": "Village Khed, District Pune",
-  "createdAt": "ISODate",
-  "updatedAt": "ISODate"
+  "address": "Opposite Railway Station, Pune",
+  "contactNumber": "+91-20-26123456",
+  "isActive": true,
+  "createdAt": "2026-09-03T08:00:00.000Z",
+  "updatedAt": "2026-09-03T08:00:00.000Z"
 }
 ```

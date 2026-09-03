@@ -16,7 +16,9 @@
     "confirm": "Confirm",
     "search": "Search",
     "noResults": "No results found",
-    "actions": "Actions"
+    "actions": "Actions",
+    "submit": "Submit",
+    "back": "Back"
   },
   "auth": {
     "signIn": "Sign in",
@@ -27,6 +29,36 @@
     "signingIn": "Signing in...",
     "signInError": "Unable to sign in. Please try again.",
     "continueWith": "Or continue with"
+  },
+  "onboarding": {
+    "title": "Complete Your Profile",
+    "subtitle": "Set up your HealthBridge account to get started",
+    "selectFacility": "Select your healthcare facility",
+    "facilityLabel": "Healthcare Facility",
+    "facilityPlaceholder": "Choose a facility...",
+    "requestRole": "Request access as",
+    "roleLabel": "Requested Role",
+    "rolePlaceholder": "Select a role...",
+    "roleHelp": "Your selected role will be reviewed and approved by your hospital administrator.",
+    "submitRequest": "Submit Role Request",
+    "submitting": "Submitting...",
+    "success": "Role request submitted successfully",
+    "error": "Failed to submit role request. Please try again."
+  },
+  "status": {
+    "pending": "Pending Approval",
+    "active": "Active",
+    "rejected": "Request Rejected",
+    "pendingTitle": "Your account is pending approval",
+    "pendingMessage": "Your role request has been submitted and is awaiting review by your hospital administrator. You will be notified once your request has been processed.",
+    "rejectedTitle": "Your role request was rejected",
+    "rejectedMessage": "Your request to access the platform was not approved. Please contact your hospital administrator for more information or to submit a new request.",
+    "rejectedReason": "Reason",
+    "contactAdmin": "Contact your hospital administrator",
+    "facility": "Facility",
+    "requestedRole": "Requested Role",
+    "approvedRole": "Approved Role",
+    "accountStatus": "Account Status"
   },
   "nav": {
     "dashboard": "Dashboard",

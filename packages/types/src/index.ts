@@ -1,4 +1,7 @@
+// ============================================
 // User & Role Types
+// ============================================
+
 export type UserRole =
   | 'admin'
   | 'doctor'
@@ -7,14 +10,27 @@ export type UserRole =
   | 'pharmacist'
   | 'labStaff';
 
+/** Roles that a normal user can self-request during onboarding */
+export type RequestableRole = Exclude<UserRole, 'admin'>;
+
+/** Account status in the role request/approval workflow */
+export type AccountStatus = 'pending' | 'active' | 'rejected';
+
 export interface User {
   id: string;
   clerkId: string;
   email: string;
   firstName: string | null;
   lastName: string | null;
-  role: UserRole | null;
-  facilityId?: string;
+  facilityId: string | null;
+  requestedRole: RequestableRole | null;
+  approvedRole: UserRole | null;
+  status: AccountStatus;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  rejectedBy: string | null;
+  rejectedAt: string | null;
+  rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -28,11 +44,15 @@ export interface Facility {
   state: string;
   address?: string;
   contactNumber?: string;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
+// ============================================
 // API Response Types
+// ============================================
+
 export interface ApiSuccessResponse<T = any> {
   success: true;
   data: T;
@@ -56,10 +76,35 @@ export interface ApiErrorResponse {
 
 export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse;
 
-// Future Domain Entity Placeholders (to be extended by S1/S2/S3)
+// ============================================
+// Onboarding Types
+// ============================================
+
+export interface OnboardingPayload {
+  facilityId: string;
+  requestedRole: RequestableRole;
+}
+
+export interface UserProfile {
+  id: string;
+  clerkId: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  facilityId: string | null;
+  facilityName: string | null;
+  requestedRole: RequestableRole | null;
+  approvedRole: UserRole | null;
+  status: AccountStatus;
+}
+
+// ============================================
+// Future Domain Entity Placeholders (S1/S2/S3)
+// ============================================
+
 export interface PatientBase {
   id: string;
-  uhid: string; // Unique Health ID / ABHA
+  uhid: string;
   fullName: string;
   gender: 'male' | 'female' | 'other';
   dateOfBirth?: string;

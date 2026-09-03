@@ -3,6 +3,8 @@ import type { UserRole } from '@/components/providers/UserProvider';
 /**
  * Role-based access configuration.
  * Future role developers will use this to define permissions.
+ *
+ * IMPORTANT: Authorization must ALWAYS use approvedRole, NEVER requestedRole.
  */
 export interface RoleConfig {
   role: UserRole;
@@ -17,7 +19,7 @@ export const roleConfigs: Record<UserRole, RoleConfig> = {
     role: 'admin',
     label: 'Hospital Admin',
     defaultRoute: '/dashboard',
-    permissions: ['manage:facility', 'manage:users', 'view:analytics'],
+    permissions: ['manage:facility', 'manage:users', 'view:analytics', 'manage:approvals'],
   },
   doctor: {
     role: 'doctor',
@@ -52,17 +54,27 @@ export const roleConfigs: Record<UserRole, RoleConfig> = {
 };
 
 /**
- * Check if a user role has a specific permission.
+ * Check if the user's APPROVED role has a specific permission.
+ * Never pass requestedRole here.
  */
-export function hasPermission(role: UserRole | null, permission: string): boolean {
-  if (!role) return false;
-  return roleConfigs[role]?.permissions.includes(permission) ?? false;
+export function hasPermission(approvedRole: UserRole | null, permission: string): boolean {
+  if (!approvedRole) return false;
+  return roleConfigs[approvedRole]?.permissions.includes(permission) ?? false;
 }
 
 /**
- * Get the default route for a user role.
+ * Get the default route for the user's APPROVED role.
  */
-export function getDefaultRoute(role: UserRole | null): string {
-  if (!role) return '/dashboard';
-  return roleConfigs[role]?.defaultRoute ?? '/dashboard';
+export function getDefaultRoute(approvedRole: UserRole | null): string {
+  if (!approvedRole) return '/dashboard';
+  return roleConfigs[approvedRole]?.defaultRoute ?? '/dashboard';
 }
+
+/** Roles that can be self-requested by normal users (excludes admin) */
+export const REQUESTABLE_ROLES: Exclude<UserRole, 'admin'>[] = [
+  'doctor',
+  'nurse',
+  'receptionist',
+  'pharmacist',
+  'labStaff',
+];

@@ -37,6 +37,7 @@ export default function SignInPage() {
         {/* Clerk SignIn component */}
         <div className={styles.authBox}>
           <SignIn
+            fallbackRedirectUrl="/onboarding"
             appearance={{
               elements: {
                 rootBox: {

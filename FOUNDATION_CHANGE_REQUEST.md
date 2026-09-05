@@ -590,3 +590,782 @@ After completing this phase, STOP.
 Do not start implementing S1/S2/S3 role-specific features.
 
 Then report the implementation status and wait for further instructions.
+
+5/09/2026 - 10:35 PM
+# FOUNDATION ROUTING + ONBOARDING FIX
+
+You are working on the S1 branch of the Sahay project.
+
+Branch:
+feature/s1-admin-doctor
+
+Your task is to fix the authentication, signup, onboarding and post-login routing flow.
+
+IMPORTANT:
+This is a FOUNDATION change.
+Do not start implementing Hospital Admin or Doctor feature modules yet.
+
+Before making any changes, read:
+
+1. docs/PROJECT_CONTEXT.md
+2. docs/ARCHITECTURE.md
+3. docs/API_CONTRACT.md
+4. docs/DATABASE_SCHEMA.md
+5. docs/DEVELOPMENT_RULES.md
+6. docs/TEAM_OWNERSHIP_MATRIX.md
+7. agents/s1/CONTEXT.md
+8. agents/s1/IMPLEMENTATION.md
+9. agents/s1/PROGRESS.md
+10. FOUNDATION_CHANGE_REQUEST.md, if present
+
+Then inspect the actual current routing/authentication implementation.
+
+Do not assume that the documentation exactly matches the current code.
+The existing implementation must be inspected before editing.
+
+==================================================
+1. CURRENT PROBLEM
+==================================================
+
+The current application behaves approximately like:
+
+Landing Page
+    ↓
+Signup
+    ↓
+/dashboard
+    ↓ after approximately 2 seconds
+/onboarding
+
+This is incorrect because /dashboard belonged to the previous product flow.
+
+The new approved product flow is:
+
+Landing
+    ↓
+Signup
+    ↓
+Onboarding
+    ↓
+User selects facility
+    ↓
+User selects/request a role
+    ↓
+Role request submitted
+    ↓
+Pending approval state
+    ↓
+Hospital Admin reviews request
+    ↓
+Approve / Reject
+    ↓
+If approved → appropriate role experience
+
+There must NOT be an unnecessary redirect through /dashboard.
+
+==================================================
+2. PRIMARY OBJECTIVE
+==================================================
+
+Change the application so that:
+
+NEW USER:
+
+Landing
+→ Signup
+→ Onboarding
+
+Existing authenticated user:
+
+→ correct destination based on their actual application state
+
+Do not blindly redirect every authenticated user to /onboarding.
+
+The routing system must distinguish between:
+
+- authenticated but not onboarded
+- onboarding incomplete
+- role request pending
+- role request rejected
+- approved and active user
+- inactive/suspended user
+- approved Hospital Admin
+- approved Doctor
+- approved Receptionist
+- approved Nurse/Healthcare Worker
+- approved Lab Staff
+- approved Pharmacist
+
+==================================================
+3. REMOVE OLD /dashboard FLOW
+==================================================
+
+The old /dashboard page was created under the previous product idea.
+
+Find out exactly how /dashboard is currently implemented and what is referencing it.
+
+Do not simply delete the file immediately.
+
+First inspect:
+
+- routes
+- redirects
+- middleware
+- authentication callbacks
+- post-signup callbacks
+- post-login callbacks
+- navigation links
+- Clerk configuration
+- route guards
+- layout redirects
+- any dashboard references
+- any useEffect-based delayed redirects
+
+Identify all code paths that send users to:
+
+/dashboard
+
+Then remove the obsolete redirect logic.
+
+If /dashboard is no longer required anywhere in the new architecture, remove the obsolete page/code safely.
+
+If another legitimate system component still depends on it, do not blindly delete it. Refactor the dependency to the new destination and then remove it if safe.
+
+There must be no artificial:
+
+/dashboard → /onboarding
+
+redirect.
+
+==================================================
+4. LANDING PAGE → SIGNUP
+==================================================
+
+Inspect the landing page.
+
+The primary signup/get-started CTA must correctly navigate to the application's existing signup route.
+
+Determine the actual signup route from the current Clerk integration.
+
+Do not invent a new authentication implementation.
+
+If Clerk's signup route is already correctly configured, reuse it.
+
+Verify:
+
+Landing
+→ clicking Sign Up / Get Started
+→ Signup page
+
+There must not be a situation where the user has to manually type the signup URL.
+
+Check all relevant CTAs/buttons/links.
+
+==================================================
+5. SIGNUP → ONBOARDING
+==================================================
+
+After successful account creation, the user must not be sent to /dashboard.
+
+The intended destination for a newly created user is:
+
+/onboarding
+
+The onboarding route must load reliably immediately after signup.
+
+Do not implement a fake timed redirect such as:
+
+setTimeout(() => router.push('/onboarding'), 2000)
+
+The redirect must be state-based and deterministic.
+
+The system should use the actual authenticated/application state.
+
+==================================================
+6. IMPORTANT: DO NOT REDIRECT ALL USERS TO ONBOARDING
+==================================================
+
+This is extremely important.
+
+Only users who actually require onboarding should be sent to:
+
+/onboarding
+
+An already onboarded and approved user must NOT be repeatedly redirected to onboarding.
+
+The routing logic should conceptually work like:
+
+IF user is not authenticated:
+    → public/landing/auth flow
+
+IF user is authenticated AND onboarding is incomplete:
+    → /onboarding
+
+IF user is authenticated AND onboarding is complete AND role request is pending:
+    → pending/request-status experience
+
+IF user is authenticated AND request is rejected:
+    → appropriate rejection/request-retry experience
+
+IF user is authenticated AND approved + active:
+    → role-specific destination
+
+IF user is inactive/suspended:
+    → appropriate account-status page
+
+Do not implement these states using arbitrary delays.
+
+Use actual application state.
+
+==================================================
+7. ONBOARDING REQUIREMENTS
+==================================================
+
+The onboarding page is now the official first-time setup flow.
+
+The user should be able to:
+
+1. Select/request their facility.
+2. Select/request their intended role.
+3. Review the information.
+4. Submit the request.
+
+The request should enter a pending state.
+
+The user should NOT immediately receive the requested role's privileges.
+
+For example:
+
+User chooses:
+
+Role:
+Doctor
+
+Status:
+PENDING
+
+This does NOT mean:
+
+Role:
+Doctor
+Status:
+ACTIVE
+
+The requested role must remain separate from the approved role/state.
+
+==================================================
+8. ROLE REQUEST MODEL
+==================================================
+
+Use the project's existing role-request implementation if it exists.
+
+Do not create a second competing role-request system.
+
+Conceptually the data should support:
+
+User
+- identity
+- facility
+- requestedRole
+- approvedRole
+- status
+- request metadata
+
+The exact property names MUST follow the existing project schema.
+
+Do not invent duplicate fields if equivalent fields already exist.
+
+==================================================
+9. SECURITY REQUIREMENT
+==================================================
+
+Never treat the user's selected/requested role as an authorized role.
+
+Example:
+
+User selects:
+
+DOCTOR
+
+That means:
+
+requestedRole = DOCTOR
+
+It does NOT mean:
+
+approvedRole = DOCTOR
+
+The user must not gain Doctor permissions until the Hospital Admin approves the request.
+
+Authorization must happen server-side.
+
+Never trust:
+
+- role from frontend state
+- role from localStorage
+- role from request body
+- facility from client input
+- approval status from client input
+
+Use authenticated identity and canonical application data.
+
+==================================================
+10. ONBOARDING SUBMISSION
+==================================================
+
+When the user submits onboarding:
+
+Validate:
+
+- authenticated user
+- valid facility
+- valid requested role
+- required onboarding information
+- duplicate/pending request conditions
+
+Then create/update the canonical onboarding/role-request state.
+
+After successful submission:
+
+DO NOT redirect to /dashboard.
+
+Instead show the correct pending state.
+
+For example:
+
+"Your access request has been submitted."
+
+"Your selected role is awaiting approval from the hospital administrator."
+
+The exact wording should use the project's i18n system.
+
+==================================================
+11. PENDING STATE
+==================================================
+
+Inspect whether a pending/request-status page already exists.
+
+If it exists:
+    reuse and improve it.
+
+If it does not exist:
+    create a minimal appropriate pending state/page.
+
+The pending state should communicate:
+
+- request submitted
+- requested role
+- facility
+- current status
+- that approval is required
+- what happens next
+
+Do not expose internal administrative information.
+
+==================================================
+12. REJECTED STATE
+==================================================
+
+If the existing application supports rejected requests, make routing handle them correctly.
+
+A rejected user must not receive the requested role's privileges.
+
+Provide an appropriate UI state.
+
+If the existing architecture allows resubmission, reuse that mechanism.
+
+Do not invent a new rejection workflow unless required.
+
+==================================================
+13. APPROVED USER ROUTING
+==================================================
+
+After approval, the user should be routed to the experience associated with their APPROVED role.
+
+Conceptually:
+
+Hospital Admin
+→ Admin dashboard
+
+Doctor
+→ Doctor dashboard
+
+Receptionist
+→ Receptionist dashboard
+
+Nurse / Healthcare Worker
+→ Nurse dashboard
+
+Lab Staff
+→ Laboratory dashboard
+
+Pharmacist
+→ Pharmacy dashboard
+
+IMPORTANT:
+
+These role dashboards may not all exist yet.
+
+Do NOT create all six dashboards as part of this task.
+
+Instead:
+
+- create/verify the routing architecture
+- use existing routes where they exist
+- use a safe placeholder or documented destination for role modules that have not yet been implemented
+
+Do not fabricate unfinished role features.
+
+==================================================
+14. HOSPITAL ADMIN SPECIAL CASE
+==================================================
+
+Hospital Admin is a controlled/provisioned role.
+
+Do not allow a normal user to self-assign Hospital Admin simply by selecting it during onboarding.
+
+Inspect the current role-request rules.
+
+If Hospital Admin is already correctly protected, preserve that behavior.
+
+If the current onboarding UI incorrectly allows unrestricted Admin requests, fix it according to the project's approved authorization architecture.
+
+Do not introduce privilege escalation.
+
+==================================================
+15. MIDDLEWARE / ROUTE GUARDS
+==================================================
+
+Inspect the application's middleware and route guards.
+
+Make routing state-based.
+
+Avoid contradictory redirect logic between:
+
+- middleware
+- layout
+- page
+- client-side useEffect
+- Clerk callbacks
+
+There should be one clear routing policy.
+
+Avoid redirect loops such as:
+
+/onboarding
+→ /dashboard
+→ /onboarding
+
+or:
+
+/onboarding
+→ /onboarding
+
+or:
+
+/login
+→ /dashboard
+→ /onboarding
+
+Remove obsolete redirect paths.
+
+==================================================
+16. CLERK INTEGRATION
+==================================================
+
+Do not replace Clerk.
+
+Inspect:
+
+- Clerk provider
+- sign-up configuration
+- sign-in configuration
+- callback/redirect configuration
+- middleware
+- session handling
+
+Use the existing project architecture.
+
+Do not expose Clerk secret keys.
+
+Do not hardcode authentication credentials.
+
+==================================================
+17. ROUTE ACCESS MATRIX
+==================================================
+
+Create or verify a route-access policy similar to:
+
+PUBLIC:
+/
+signup
+login
+
+ONBOARDING:
+Authenticated users whose onboarding is incomplete
+
+PENDING:
+Authenticated users with pending access request
+
+REJECTED:
+Authenticated users with rejected request, according to existing workflow
+
+ADMIN:
+Approved + active Hospital Admin
+
+DOCTOR:
+Approved + active Doctor
+
+RECEPTIONIST:
+Approved + active Receptionist
+
+NURSE:
+Approved + active Nurse/Healthcare Worker
+
+LAB:
+Approved + active Lab Staff
+
+PHARMACY:
+Approved + active Pharmacist
+
+The exact route names must follow the actual repository.
+
+==================================================
+18. UI/UX
+==================================================
+
+Do not redesign the entire application.
+
+Preserve the existing design system.
+
+Ensure:
+
+- responsive mobile/desktop
+- light mode
+- dark mode
+- English
+- Hindi
+- Marathi
+- accessible forms
+- proper loading states
+- proper validation states
+- proper error states
+
+Do not hardcode English text if the project already uses i18n.
+
+==================================================
+19. ERROR HANDLING
+==================================================
+
+Handle:
+
+- user not authenticated
+- signup incomplete
+- onboarding API failure
+- invalid facility
+- invalid role
+- duplicate request
+- existing pending request
+- rejected request
+- inactive account
+- unauthorized access
+- network failure
+
+Do not show raw server errors or sensitive implementation details to users.
+
+==================================================
+20. TESTING
+==================================================
+
+After implementation, manually test at minimum:
+
+TEST 1:
+Open landing page.
+Click Sign Up / Get Started.
+Expected:
+Signup page opens.
+
+TEST 2:
+Create a new account.
+Expected:
+User goes directly to /onboarding.
+No /dashboard transition.
+
+TEST 3:
+Refresh onboarding.
+Expected:
+User remains correctly in onboarding if onboarding is incomplete.
+
+TEST 4:
+Submit facility + role request.
+Expected:
+Request is saved.
+User enters pending state.
+
+TEST 5:
+Refresh after submitting request.
+Expected:
+User remains in pending state.
+User is NOT treated as an approved role.
+
+TEST 6:
+Attempt to manually open a protected role route while pending.
+Expected:
+Access denied/redirected.
+
+TEST 7:
+Approved user logs in.
+Expected:
+User goes directly to their approved role destination.
+
+TEST 8:
+Rejected user logs in.
+Expected:
+User sees appropriate rejected/request state.
+
+TEST 9:
+Unauthenticated user manually opens /onboarding.
+Expected:
+User is redirected to authentication.
+
+TEST 10:
+Pending Doctor manually changes frontend/local state to Doctor.
+Expected:
+Doctor API/page access remains denied.
+
+TEST 11:
+Normal user attempts to obtain Hospital Admin privileges through request manipulation.
+Expected:
+Denied.
+
+TEST 12:
+Check browser refreshes.
+Expected:
+No redirect loop.
+
+==================================================
+21. SEARCH FOR OBSOLETE DASHBOARD REFERENCES
+==================================================
+
+Search the entire repository for:
+
+/dashboard
+dashboard
+router.push('/dashboard')
+router.replace('/dashboard')
+redirect('/dashboard')
+window.location
+NEXT_PUBLIC_*
+Clerk redirect configuration
+
+Inspect every relevant result.
+
+Do not blindly replace every occurrence.
+
+Determine whether each occurrence is:
+
+- obsolete
+- valid
+- documentation only
+- test only
+- role-specific dashboard
+
+Remove or update obsolete references.
+
+==================================================
+22. DO NOT TOUCH OTHER DEVELOPERS' FEATURES
+==================================================
+
+You are S1.
+
+Do not modify:
+
+apps/web/features/receptionist/
+apps/web/features/nurse/
+apps/web/features/laboratory/
+apps/web/features/pharmacy/
+
+Do not implement their features.
+
+If routing needs destinations that don't exist yet, do not build their feature modules.
+
+Only modify shared authentication/routing infrastructure when necessary.
+
+If a shared file must be changed, make the smallest possible change.
+
+==================================================
+23. GIT SAFETY
+==================================================
+
+Before editing:
+
+git status
+
+Do not:
+
+- git reset --hard
+- git clean -fd
+- force push
+- overwrite another developer's work
+
+Preserve all existing work.
+
+Make focused commits.
+
+==================================================
+24. VALIDATION
+==================================================
+
+Before declaring completion, run the project's available:
+
+- typecheck
+- lint
+- tests
+- build
+
+Also run the application locally and manually verify the authentication flow.
+
+If a command does not exist, document that rather than inventing it.
+
+==================================================
+25. PROGRESS LOG
+==================================================
+
+After completing the task, update:
+
+agents/s1/PROGRESS.md
+
+Add a timestamped entry containing:
+
+- objective
+- changes made
+- files modified
+- routes changed
+- authentication/routing changes
+- tests performed
+- build/typecheck/lint result
+- known issues
+- next step
+
+Do not erase previous progress.
+
+==================================================
+26. FINAL REPORT
+==================================================
+
+At the end, report:
+
+1. What caused /dashboard to appear.
+2. Which redirect(s) were removed.
+3. How Signup → Onboarding now works.
+4. How pending requests are handled.
+5. How approved users are routed.
+6. Whether /dashboard was removed or retained and why.
+7. Files changed.
+8. Tests performed.
+9. Any shared files modified.
+10. Any remaining blockers.
+
+Do not claim success unless the local flow has actually been tested.
+
+STOP if you encounter an architectural conflict that cannot be safely resolved from the existing project documentation. Record the blocker instead of guessing.

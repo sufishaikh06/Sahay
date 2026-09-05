@@ -13,6 +13,8 @@ export default function SignUpPage() {
       }}
     >
       <SignUp
+        fallbackRedirectUrl="/onboarding"
+        forceRedirectUrl="/onboarding"
         appearance={{
           elements: {
             card: {
